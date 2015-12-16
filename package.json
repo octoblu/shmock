@@ -1,5 +1,5 @@
 {
-  "name": "shmock",
+  "name": "@octoblu/shmock",
   "version": "0.7.2",
   "description": "Simple HTTP Mocking library",
   "keywords": [
