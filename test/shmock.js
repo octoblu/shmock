@@ -127,13 +127,13 @@ describe("shmock", function() {
 
     it("Should match query parameters", function(done) {
       mock.post("/get")
-        .query({total: 10, limit: 1})
+        .query({total: 10, limit: 1, showAll: true})
         .query({foo: "bar"})
         .query("a=b&c=d")
         .query("x=y")
         .reply(200);
 
-      test.post("/get").query({total: 10, limit: 1, foo: "bar", a: "b", c: "d", x: "y"}).expect(200, done);
+      test.post("/get").query({total: 10, limit: 1, foo: "bar", a: "b", c: "d", x: "y", showAll: true}).expect(200, done);
     });
 
     it("Should fail if headers are not matched", function(done) {

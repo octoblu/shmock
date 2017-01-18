@@ -145,11 +145,17 @@ function deepEqual() {
   }
 }
 
-function objectStringToNumberify(obj) {
+function convertQueryStringObject(obj) {
   if (!_.isPlainObject(obj)) return obj;
   return _.mapValues(obj, function(o) {
     if (_.isPlainObject(o)) {
-      return objectStringToNumberify(o)
+      return convertQueryStringObject(o)
+    }
+    if (o === 'true') {
+      return true
+    }
+    if (o === 'false') {
+      return true
     }
     var num = _.toNumber(o)
     if (_.isNumber(num) && !_.isNaN(num)) {
@@ -166,7 +172,7 @@ Assertion.prototype.reply = function(status, responseBody, responseHeaders) {
 
   this.app[this.method](this.path, function(req, res) {
     if(self.qs) {
-      deepEqual(objectStringToNumberify(req.query), self.qs);
+      deepEqual(convertQueryStringObject(req.query), self.qs);
     }
     if(self.requestBody) {
       if(req.text) {
