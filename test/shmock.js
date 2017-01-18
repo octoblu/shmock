@@ -113,9 +113,16 @@ describe("shmock", function() {
     });
 
     it("Should succeed if expected request json match the one sent", function(done) {
-      mock.post("/get").send({foo: "bar", bar: "foo"}).reply(200);
+      mock.post("/get").send({ foo: 'bar', bar: 'foo' }).reply(200);
+      test.post("/get").send({ foo: 'bar', bar: 'foo' }).expect(200, done);
+    });
 
-      test.post("/get").send({bar: "foo", foo: "bar"}).expect(200, done);
+    xit("Should show diffs better if enabled", function(done) {
+      packageJSON = require('../package.json')
+      mock.post("/get").send(packageJSON).reply(200);
+      packageJSON2 = JSON.parse(JSON.stringify(packageJSON))
+      packageJSON2.somethingSweet = true
+      test.post("/get").send(packageJSON2).expect(200, done);
     });
 
     it("Should match query parameters", function(done) {

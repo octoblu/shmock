@@ -1,6 +1,9 @@
+var _       = require("lodash");
 var express = require("express");
 var methods = require("methods");
-var assert = require('assert-diff');
+var assert  = require("chai").assert;
+var chalk   = require("chalk");
+var diff    = require("diff");
 var querystring = require("querystring");
 var EventEmitter = require("events").EventEmitter;
 var util = require("util");
@@ -111,6 +114,51 @@ Assertion.prototype.persist = function() {
   return this;
 }
 
+function printDiff(parts) {
+  parts.forEach(function (part) {
+    part.value
+      .split('\n')
+      .filter(function (line) { return !!line; })
+      .forEach(function (line) {
+        if (part.added) {
+          process.stdout.write(chalk.green('+  ' + line) + '\n');
+        } else if (part.removed) {
+          process.stdout.write(chalk.red('-  ' + line) + '\n');
+        } else {
+          process.stdout.write(chalk.dim('   ' + line) + '\n');
+        }
+      });
+  });
+  process.stdout.write('\n');
+}
+
+function deepEqual() {
+  try {
+    assert.deepEqual.apply(assert.deepEqual, arguments);
+  } catch (error) {
+    if (_.isPlainObject(error.expected) && _.isPlainObject(error.actual)) {
+      error.message = printDiff(diff.diffJson(error.expected, error.actual))
+      delete error.expected;
+      delete error.actual;
+    }
+    throw error;
+  }
+}
+
+function objectStringToNumberify(obj) {
+  if (!_.isPlainObject(obj)) return obj;
+  return _.mapValues(obj, function(o) {
+    if (_.isPlainObject(o)) {
+      return objectStringToNumberify(o)
+    }
+    var num = _.toNumber(o)
+    if (_.isNumber(num) && !_.isNaN(num)) {
+      return num
+    }
+    return o
+  })
+}
+
 Assertion.prototype.reply = function(status, responseBody, responseHeaders) {
   this.parseExpectedRequestBody();
 
@@ -118,17 +166,17 @@ Assertion.prototype.reply = function(status, responseBody, responseHeaders) {
 
   this.app[this.method](this.path, function(req, res) {
     if(self.qs) {
-      assert.deepEqual(req.query, self.qs);
+      deepEqual(objectStringToNumberify(req.query), self.qs);
     }
     if(self.requestBody) {
       if(req.text) {
-        assert.deepEqual(req.text, self.requestBody);
+        deepEqual(req.text, self.requestBody);
       } else {
-        assert.deepEqual(req.body, self.requestBody);
+        deepEqual(req.body, self.requestBody);
       }
     }
     for(var name in self.headers) {
-      assert.deepEqual(req.headers[name], self.headers[name]);
+      deepEqual(req.headers[name], self.headers[name]);
     }
 
     if(responseHeaders) {
